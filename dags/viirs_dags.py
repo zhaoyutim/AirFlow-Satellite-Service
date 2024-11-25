@@ -28,14 +28,14 @@ dir_tif = root_path + 'data/VNPIMGTIF'
 dir_subset = root_path + 'data/subset'
 product_id = 'IMG'
 
-products_id = ['VJ102'+product_id, 'VJ103'+product_id]
-collection_id = '5201'
+products_id = ['VNP02'+product_id, 'VNP03'+product_id]
+collection_id = '5200'
 
 ids = ["CANADA","US","EU"]
 rois = [[-170,41,-41,73],[-127,24,-66,50],[-24,35,41,72]]
 
-dns = ['D'] #,'N']
-schedule_interval = ['0 12 * * *','0 13 * * *','0 14 * * *']
+dns = ['D', 'N']
+schedule_interval = ['0 12 * * *','0 12 * * *','0 12 * * *']
 
 for i in range(len(ids)):
     for dn in dns:
@@ -53,22 +53,40 @@ for i in range(len(ids)):
         )
 
         with dag:
-            download_task = SlurmOperator(
-                task_id="download_task",
-                script_args={"--id": ids[i],
-                             "--roi": rois[i],
-                             "--start_date": start_date,
-                             "--end_date": end_date,
-                             "--dn_img": dn,
-                             "--products_id_img":products_id,
-                             "--products_id_mod": []},
-                script=root_path+"scripts/download_viirs.py",
-                conda_path=slurm_config['conda_path'],
-                env=slurm_config['env'],
-                log_path=slurm_config['log_path'],
-                poke_interval=60, 
-                timeout=7200,
-        )
+            if dn == 'D':
+                download_task = SlurmOperator(
+                    task_id="download_task",
+                    script_args={"--id": ids[i],
+                                "--roi": rois[i],
+                                "--start_date": start_date,
+                                "--end_date": end_date,
+                                "--dn_img": dn,
+                                "--products_id_img":products_id,
+                                "--products_id_mod": []},
+                    script=root_path+"scripts/download_viirs.py",
+                    conda_path=slurm_config['conda_path'],
+                    env=slurm_config['env'],
+                    log_path=slurm_config['log_path'],
+                    poke_interval=60, 
+                    timeout=7200,
+                )
+            else:
+                download_task = SlurmOperator(
+                    task_id="download_task",
+                    script_args={"--id": ids[i],
+                                "--roi": rois[i],
+                                "--start_date": start_date,
+                                "--end_date": end_date,
+                                "--dn_img": 'B,N',
+                                "--products_id_img":products_id,
+                                "--products_id_mod": []},
+                    script=root_path+"scripts/download_viirs.py",
+                    conda_path=slurm_config['conda_path'],
+                    env=slurm_config['env'],
+                    log_path=slurm_config['log_path'],
+                    poke_interval=60, 
+                    timeout=7200,
+                )
 
             upload_task = PythonOperator(
                 task_id='upload_gee_task',

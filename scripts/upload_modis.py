@@ -20,7 +20,7 @@ def upload_in_parallel(id, date, asset_id):
     """Uploads MODIS TIFF files located in a specified directory for a given ID and date."""
     file_list = glob.glob(os.path.join(modis_config['dir_tif'], id, date, '*.tif'))
     results = []
-    with multiprocessing.Pool(processes=8) as pool:
+    with multiprocessing.Pool(processes=1) as pool:
         for file in file_list:
             result = pool.apply_async(upload_files, (file, asset_id, date))
             results.append(result)

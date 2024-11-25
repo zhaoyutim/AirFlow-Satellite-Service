@@ -31,7 +31,7 @@ def upload_in_parallel(id, start_date, end_date, asset_id, dn, type="IMG"):
     print("Found",len(args_list),"files to upload.")
     
     results = []
-    with multiprocessing.Pool(processes=8) as pool:
+    with multiprocessing.Pool(processes=1) as pool:
         for args in args_list:
             result = pool.apply_async(upload_files, args)
             results.append(result)

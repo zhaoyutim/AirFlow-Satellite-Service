@@ -18,7 +18,7 @@ import ee
 import utils
 from datetime import datetime
 
-ee.Authenticate()
+# ee.Authenticate()
 ee.Initialize(project=utils.config.project_name)
 
 from_date = "2024-04-01"
@@ -99,3 +99,6 @@ for source in sources:
                     'to_asset_id': f"projects/ee-eo4wildfire/assets/progressions/{source}_PRG_{ids[i]}",
                     'region':regions[i]},
             )
+
+if __name__ == "__main__":
+    convert_active_fire("US", "MODIS", from_date, to_date, "projects/ee-eo4wildfire/assets/MODIS_AF_2024", "projects/ee-eo4wildfire/assets/progressions/MODIS_PRG_US",ee.Geometry.Polygon([[-140, 40],[-140, 10],[-40, 10],[-40, 40]]))

@@ -87,6 +87,10 @@ if __name__ == "__main__":
     parser.add_argument('--asset_ids', type=lambda s: [item for item in s.split(',')])
 
     args = parser.parse_args()
-    exclude_dirs = ["/home/a/a/aadelow/LowResSatellitesService/data/S2"]
+    exclude_dirs = ["/home/a/a/aadelow/LowResSatellitesService/data/S2",
+                    "/home/a/a/aadelow/LowResSatellitesService/data/mosaics/EU/base",
+                    "/home/a/a/aadelow/LowResSatellitesService/data/mosaics/Canada/base",
+                    "/home/a/a/aadelow/LowResSatellitesService/data/mosaics/US/base",]
+    print(exclude_dirs)
     delete_old_date_dirs(args.path, args.days, exclude_dirs)
     clean_ee(args.asset_ids)

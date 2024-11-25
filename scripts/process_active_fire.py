@@ -18,6 +18,8 @@ from pathlib import Path
 import zipfile
 import glob
 import geopandas
+import utils
+from utils import config
 import pandas
 import os.path
 import argparse
@@ -80,7 +82,7 @@ def download_and_upload(urls, save_folder, asset_id, gspath):
         print("Reading files....")
         new_file = geopandas.read_file(new_file_path,engine='pyogrio', use_arrow=True)
         print(new_file.columns)
-        new_file['ACQ_DATE'] = pandas.to_datetime(new_file['ACQ_DATE']).astype(np.int64) // 10**6
+        # new_file['ACQ_DATE'] = pandas.to_datetime(new_file['ACQ_DATE']).astype(np.int64) // 10**6
         old_file = geopandas.read_file(old_file_path,engine='pyogrio', use_arrow=True)
         print("Merging files...")
         gdf = geopandas.GeoDataFrame(pandas.concat([old_file, new_file]))
@@ -103,7 +105,7 @@ def download_and_upload(urls, save_folder, asset_id, gspath):
 
     print("Uploading...")
     upload_to_bucket = f"gsutil -m cp -r {save_folder}/{file_name}.zip {gspath}/{file_name}.zip"
-    ee_upload_table = f"earthengine upload table --force --asset_id={asset_id} {gspath}/{file_name}.zip"
+    ee_upload_table = config.ee_path + f" upload table --force --asset_id={asset_id} {gspath}/{file_name}.zip"
 
     os.system(upload_to_bucket)
 

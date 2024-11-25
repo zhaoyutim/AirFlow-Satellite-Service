@@ -24,16 +24,18 @@ from scipy.ndimage import label
 from utils.export import upload_files
 from utils.config import viirs_config
 
-def inference(id, model_name, start_date, end_date, checkpoint_path, ts_len):
+def inference(id, model_name, start_date, end_date, mode, checkpoint_path, ts_len):
     """Executes the inference process using a specified model and saves the results."""
     print("Starting inference...")
-    
-    data_path = os.path.join(viirs_config['dir_mosaics'], "batched_patches", id)
+    if mode == 'ba':
+        data_path = os.path.join(viirs_config['dir_mosaics'], "batched_patchesBA", id)
+    else:
+        data_path = os.path.join(viirs_config['dir_mosaics'], "batched_patches", id)
     output_path = os.path.join(root_path, "data/VIIRS/model_outputs", id)
     os.makedirs(data_path, exist_ok=True)
     os.makedirs(output_path, exist_ok=True)
 
-    infer.run(model_name,'af',16,3,36,8,ts_len,'v1',str(start_date),str(end_date),output_path,data_path,checkpoint_path)
+    infer.run(model_name,mode,4,3,36,8,ts_len,'v1',str(start_date),str(end_date),output_path,data_path,checkpoint_path)
     print("Inference completed.")
 
 def save_fire_location(image, roi_float, date, diff, save_path, min_cluster_size = 5):
@@ -89,7 +91,7 @@ def save_fire_location(image, roi_float, date, diff, save_path, min_cluster_size
 
     with open(os.path.join(save_path, np.datetime_as_string(date, unit='D')+".txt"), 'a') as file:
         for bbox in filtered_boxes:
-            file.write(f"{",".join(map(str,bbox))}\n")
+            file.write(f'{",".join(map(str,bbox))}\n')
 
 def is_contained(rect1, rect2):
     """Checks if one rectangle is contained within another."""
@@ -192,13 +194,19 @@ if __name__ == "__main__":
     parser.add_argument('--model_name')
     parser.add_argument('--start_date')
     parser.add_argument('--end_date')
+    parser.add_argument('--mode')
     parser.add_argument('--checkpoint_path')
     parser.add_argument('--ts_len', type=int)
     parser.add_argument('--asset_id')
     parser.add_argument('--dir_tif')
 
     args = parser.parse_args()
-
-    inference(args.id, args.model_name, args.start_date, args.end_date, args.checkpoint_path, args.ts_len)
+    import psutil
+    process = psutil.Process()
+    print("Memory used:", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+    inference(args.id, args.model_name, args.start_date, args.end_date, args.mode, args.checkpoint_path, args.ts_len)
+    print("Memory used:", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
     reconstruct_image(args.id, args.model_name, args.start_date, args.end_date)
+    print("Memory used:", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
     upload_in_parallel(args.start_date, args.end_date, args.asset_id, args.dir_tif)
+    print("Memory used:", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)

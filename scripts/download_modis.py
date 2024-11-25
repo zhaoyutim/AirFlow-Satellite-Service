@@ -28,7 +28,7 @@ def download_files(id, date, collection_id, products_id, hh_list=['10', '11'], v
     url_part = f"{collection_id}/{products_id}/{year}/{julian_day}"
     dir_data_id_date = os.path.join(dir_data_id,date)
     os.makedirs(dir_data_id_date, exist_ok=True)
-    
+    print(hh_list, vv_list)
     for hh in hh_list:
         for vv in vv_list:
             print(f"\nDate: {date}， h{hh}v{vv}")
@@ -44,7 +44,7 @@ def download_files(id, date, collection_id, products_id, hh_list=['10', '11'], v
                     f"\"https://nrt4.modaps.eosdis.nasa.gov/api/v2/content/archives/allData/{url_part}/{products_id}.A"+str(year)+f"{julian_day}.h{hh}v{vv}.061.NRT.hdf\" --header \"Authorization: Bearer {config.auth_token}\" \
                         -P {dir_data_id_date}"
             if len(glob.glob(os.path.join(dir_data_id_date, f'{products_id}.A'+str(year)+f'{julian_day}.h{hh}v{vv}.061.NRT.hdf')))!=0:
-                print('HDF file exist')
+                print(f'{julian_day} HDF file exist')
                 continue
             print(command)
             print(f"\nsaved to: {dir_data_id_date}")
@@ -84,6 +84,5 @@ if __name__ == "__main__":
     parser.add_argument('--bands', type=lambda s: [item for item in s.split(',')])
 
     args = parser.parse_args()
-
-    download_files(args.id, args.date, args.collection_id, args.products_id, hh_list=['10', '11'], vv_list =['03'])
+    download_files(args.id, args.date, args.collection_id, args.products_id, hh_list=args.hh_list, vv_list=args.vv_list)
     convert_hdf_to_geotiff(args.id, args.date, args.products_id, args.format, args.bands)

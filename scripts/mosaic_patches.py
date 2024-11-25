@@ -59,7 +59,7 @@ def patch_region(id,file,roi,date):
     subprocess.call(cmd.split())
     print("Completed crop. Saved file at ", output_path)              
 
-def create_mosaic(id, roi, date, dir_subset):
+def create_mosaic(id, roi, date, mode, dir_subset):
     """Generates a mosaic from a set of TIFF images and saves it."""
     roi_string = '_'.join(str(x) for x in roi)
     date_path = os.path.join(root_path,'data','VIIRS','mosaics', id, date)
@@ -87,13 +87,17 @@ def create_mosaic(id, roi, date, dir_subset):
 
         if len(tiff_files[channel]) !=0:
             mosaic, mosaic_metadata = main_mosaic.mosaic_geotiffs(tiff_files[channel])
-            os.makedirs(os.path.join(root_path+'data/VIIRS/mosaics/channels',id,date,channel_names[channel]),exist_ok=True)
-            output_path = os.path.join(root_path+'data/VIIRS/mosaics/channels',id,date, channel_names[channel], 'VNP'+roi_string+'.tif')
+            os.makedirs(os.path.join(root_path+'data/VIIRS/mosaics/channels',id, date,channel_names[channel]),exist_ok=True)
+            output_path = os.path.join(root_path+'data/VIIRS/mosaics/channels',id, date, channel_names[channel], 'VNP'+roi_string+'.tif')
             main_mosaic.write_tiff(output_path, mosaic, mosaic_metadata)
             combine_paths.append(output_path)
             print("Created mosaic for ", channel_names[channel])
-    
+
     main_mosaic.combine_tiff(combine_paths, save_path)
+    if mode == 'ba':
+        print('mosaic base image here')
+        base_img_path = os.path.join(root_path+'data/VIIRS/mosaics', id, 'base',  'VNP'+roi_string+'.tif')
+        main_mosaic.stack_mir_on_base_img(base_img_path, save_path)
     print('Finish Creating mosaic ', save_path)    
 
 def mosaic_wrapper(args):
@@ -108,7 +112,7 @@ def patch_image_wrapper(args):
     """A wrapper function for batch patching images, used for multiprocessing."""
     return batch_patches(*args)
 
-def get_patch_images_tasks(id, start_date, end_date, roi, step, interval, dir_mosaics):
+def get_patch_images_tasks(id, start_date, end_date, mode, roi, step, interval, dir_mosaics):
     """Generates tasks for patching images over a specified date range and ROI."""
     tasks = []
     duration = datetime.datetime.strptime(end_date, '%Y-%m-%d') - datetime.datetime.strptime(start_date, '%Y-%m-%d')
@@ -119,17 +123,30 @@ def get_patch_images_tasks(id, start_date, end_date, roi, step, interval, dir_mo
         for j in range(len(y_start)):            
                 roi_string = '_'.join(str(x) for x in np.array([x_start[i], y_start[j], x_stop[i], y_stop[j]]))
                 batched_tasks = []
+                print(duration.days)
                 for l in range(duration.days//interval):
                     date = (datetime.datetime.strptime(start_date, '%Y-%m-%d') + datetime.timedelta(l*interval)).strftime('%Y-%m-%d')
                     from_date = date
-                    path = os.path.join(dir_mosaics,id,date,'VNP'+roi_string+'.tif')
+                    if mode == 'ba':
+                        path = os.path.join(dir_mosaics,id,date,'BA'+roi_string+'.tif')
+                    else:
+                        path = os.path.join(dir_mosaics,id,date,'VNP'+roi_string+'.tif')
                     batched_tasks.append(path)
                     for k in range(interval-1):
                         date = (datetime.datetime.strptime(start_date, '%Y-%m-%d') + datetime.timedelta(l*interval+k+1)).strftime('%Y-%m-%d')
-                        path = os.path.join(dir_mosaics,id,date, 'VNP'+roi_string+'.tif')
+                        if mode == 'ba':
+                            path = os.path.join(dir_mosaics,id,date,'BA'+roi_string+'.tif')
+                        else:
+                            path = os.path.join(dir_mosaics,id,date,'VNP'+roi_string+'.tif')
                         batched_tasks.append(path)
                     to_date = (datetime.datetime.strptime(start_date, '%Y-%m-%d') + datetime.timedelta(l*interval+k+1)).strftime('%Y-%m-%d')
-                    save_path = os.path.join(root_path, 'data/VIIRS/mosaics/batched_patches',id,from_date+'-'+to_date+'_'+roi_string)
+                    
+                    if mode == 'ba':
+                        os.makedirs(os.path.join(root_path, 'data/VIIRS/mosaics/batched_patchesBA',id,from_date+'-'+to_date+'_'+roi_string),exist_ok=True)
+                        save_path = os.path.join(root_path, 'data/VIIRS/mosaics/batched_patchesBA',id,from_date+'-'+to_date+'_'+roi_string)
+                    else:
+                        os.makedirs(os.path.join(root_path, 'data/VIIRS/mosaics/batched_patches',id,from_date+'-'+to_date+'_'+roi_string),exist_ok=True)
+                        save_path = os.path.join(root_path, 'data/VIIRS/mosaics/batched_patches',id,from_date+'-'+to_date+'_'+roi_string)
                 tasks.append([batched_tasks,save_path])
     return tasks
 
@@ -150,7 +167,7 @@ def get_patch_region_tasks(id, start_date,end_date,roi,step):
     return tasks
 
 
-def get_mosaic_tasks(id, start_date,end_date,rois,dir):
+def get_mosaic_tasks(id, start_date,end_date,mode,rois,dir):
     """Generates tasks for creating mosaics over a specified date range and multiple ROIs."""
     tasks=[]
     duration = datetime.datetime.strptime(end_date, '%Y-%m-%d') - datetime.datetime.strptime(start_date, '%Y-%m-%d')
@@ -158,7 +175,7 @@ def get_mosaic_tasks(id, start_date,end_date,rois,dir):
         for i in range(rois.shape[0]):
             for j in range(rois.shape[1]):
                 date = (datetime.datetime.strptime(start_date, '%Y-%m-%d') + datetime.timedelta(k)).strftime('%Y-%m-%d')
-                tasks.append((id, rois[i,j,:], date, dir))
+                tasks.append((id, rois[i,j,:], date, mode, dir))
     return tasks
 
 
@@ -168,9 +185,9 @@ def patch_regions(id, roi, start_date, end_date, step):
     with multiprocessing.Pool(processes=8) as pool:
         list(pool.imap_unordered(patch_region_wrapper, patch_region_tasks))
 
-def patch_images(id, start_date, end_date, dir_mosaics, interval, roi, step):
+def patch_images(id, start_date, end_date, mode, dir_mosaics, interval, roi, step):
     """Manages the multiprocessing of patching images based on generated tasks."""
-    tasks = get_patch_images_tasks(id, start_date, end_date, roi, step, interval, dir_mosaics)
+    tasks = get_patch_images_tasks(id, start_date, end_date, mode, roi, step, interval, dir_mosaics)
     with multiprocessing.Pool(processes=8) as pool:
         list(pool.imap_unordered(patch_image_wrapper, tasks))
 
@@ -178,7 +195,7 @@ def flatten(array,except_last_rows):
     """Flattens an array"""
     return array.reshape(-1, *array.shape[-except_last_rows:])
 
-def to_mosaic(id,start_date,end_date,roi,step):
+def to_mosaic(id,start_date,end_date, mode, roi,step):
     """Coordinates the creation of mosaics from specified ROIs over a date range."""
     x_start, x_stop = np.arange(roi[0],roi[2],step), np.arange(roi[0]+5,roi[2]+5,step)
     y_start, y_stop = np.arange(roi[1],roi[3],step), np.arange(roi[1]+5,roi[3]+5,step)
@@ -187,7 +204,7 @@ def to_mosaic(id,start_date,end_date,roi,step):
         for j in range(len(y_start)):            
                 rois[i,j,:]=np.array([x_start[i], y_start[j], x_stop[i], y_stop[j]])
     
-    mosaic_tasks = get_mosaic_tasks(id, start_date,end_date,rois,root_path+"data/VIIRS/patched_regions")
+    mosaic_tasks = get_mosaic_tasks(id, start_date,end_date,mode,rois,root_path+"data/VIIRS/patched_regions")
     with multiprocessing.Pool(processes=2) as pool:
         list(pool.imap_unordered(mosaic_wrapper, mosaic_tasks))
 
@@ -197,13 +214,14 @@ if __name__ == "__main__":
     parser.add_argument('--roi', type=lambda s: [float(item) for item in s.split(',')])
     parser.add_argument('--start_date')
     parser.add_argument('--end_date')
+    parser.add_argument('--mode')
     parser.add_argument('--interval', type=int)
-    parser.add_argument('--step', type=float)
+    parser.add_argument('--step', type=float, default=5-10*64/1488)
     parser.add_argument('--dir_mosaics')
 
     args = parser.parse_args()
     
     patch_regions(args.id, args.roi, args.start_date, args.end_date, args.step)
-    to_mosaic(args.id, args.start_date, args.end_date, args.roi, args.step)
-    patch_images(args.id, args.start_date, args.end_date, args.dir_mosaics, args.interval, args.roi, args.step)
+    to_mosaic(args.id, args.start_date, args.end_date, args.mode, args.roi, args.step)
+    patch_images(args.id, args.start_date, args.end_date, args.mode, args.dir_mosaics, args.interval, args.roi, args.step)
         

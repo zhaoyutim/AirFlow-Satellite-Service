@@ -24,11 +24,13 @@ dir_json = root_path + 'data/VNPL1'
 dir_nc = root_path + 'data/VNPNC'
 dir_tif = root_path + 'data/VNPIMGTIF'
 dir_subset = root_path + 'data/subset'
-products_id_img = ["VJ102IMG","VJ103IMG"] #['VNP02IMG', 'VNP03IMG']
-products_id_mod= ['VJ102MOD','VJ103MOD'] #['VNP02MOD','VNP03MOD']
+# products_id_img = ["VJ102IMG","VJ103IMG"] #['VNP02IMG', 'VNP03IMG']
+# products_id_mod= ['VJ102MOD','VJ103MOD'] #['VNP02MOD','VNP03MOD']
+products_id_img = ['VNP02IMG', 'VNP03IMG']
+products_id_mod= ['VNP02MOD','VNP03MOD']
 dn_img = ['D','N','B']
 dn_mod = ['D']
-collection_id = '5201' #'5200'
+collection_id = '5200' #'5200'
 model = "swinunetr3d"
 checkpoint_path = "/home/a/a/aadelow/TS-SatFire/saved_models/model_swinunetr3d_mode_af_num_heads_3_hidden_size_36_batchsize_4_checkpoint_epoch_80_nc_8_ts_2.pth"
 
@@ -39,13 +41,14 @@ rois = [[-170,41,-41,73],[-127,24,-66,50],[-24,35,41,72]] #,[-20, -35, 52, 37],[
 start_date = (datetime.datetime.today()-datetime.timedelta(days=2)).strftime('%Y-%m-%d')
 end_date = (datetime.datetime.today()-datetime.timedelta(days=0)).strftime('%Y-%m-%d')
 
+mode='af'
 interval = 2
-schedule_interval = ['0 10 * * *','0 12 * * *','0 14 * * *','0 16 * * *','0 18 * * *','0 20 * * *','0 22 * * *']
+schedule_interval = ['0 14 * * *','0 14 * * *','0 14 * * *','0 16 * * *','0 18 * * *','0 20 * * *','0 22 * * *']
 
 
 for i in range(len(ids)):
     dag = DAG(
-        'SWINUNETR3D_'+ids[i],
+        'SWINUNETR3D_AF_'+ids[i],
         default_args=config.default_args,
         schedule_interval=schedule_interval[i],
         description='A DAG for inference',
@@ -65,12 +68,12 @@ for i in range(len(ids)):
                          "--products_id_mod": products_id_mod},
             script=root_path+"scripts/download_viirs.py",
             conda_path=slurm_config['conda_path'],
-            cpus_per_task=16,
-            num_gpus=2,
+            cpus_per_task=4,
+            num_gpus=0,
             env=slurm_config['env'],
             log_path=slurm_config['log_path'],
             poke_interval=60, 
-            timeout=7200,
+            timeout=10800,
         )
 
         mosaic_patches_task = SlurmOperator(
@@ -79,14 +82,16 @@ for i in range(len(ids)):
                          "--roi": rois[i],
                          "--start_date": start_date,
                          "--end_date": end_date,
+                         "--mode":mode,
                          "--interval": interval,
                          "--step": 5-10*64/1488,
+                        # "--step": 4.57,
                          "--dir_mosaics": f"{root_path}data/VIIRS/mosaics"
                          },
             script=root_path+"scripts/mosaic_patches.py",
             conda_path=slurm_config['conda_path'],
-            cpus_per_task=16,
-            num_gpus=2,
+            cpus_per_task=8,
+            num_gpus=0,
             env=slurm_config['env'],
             log_path=slurm_config['log_path'],
             poke_interval=60, 
@@ -99,18 +104,20 @@ for i in range(len(ids)):
                          "--model_name": model,
                          "--start_date": start_date,
                          "--end_date": end_date,
+                         "--mode": mode,
                          "--checkpoint_path": checkpoint_path,
                          "--ts_len": interval,
                          "--asset_id": f"projects/ee-eo4wildfire/assets/{model}_{ids[i]}",
                          "--dir_tif": f"{root_path}data/VIIRS/model_outputs/{ids[i]}/{model}/reconstructed"},
             script=root_path+"scripts/infer_upload_viirs.py",
             conda_path=slurm_config['conda_path'],
-            cpus_per_task=16,
+            cpus_per_task=4,
+            mem_per_cpu='10000M',
             num_gpus=2,
             env=slurm_config['env'],
             log_path=slurm_config['log_path'],
             poke_interval=60, 
-            timeout=7200,
+            timeout=10800,
         )
 
 

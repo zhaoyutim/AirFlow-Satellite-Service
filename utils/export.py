@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 os.environ["GCLOUD_PROJECT"] = utils.config.project_name
 
-ee.Authenticate()
+# ee.Authenticate()
 ee.Initialize(project=utils.config.project_name)
 
 def upload_to_gcloud(file, gs_path):
@@ -30,6 +30,7 @@ def upload_to_gcloud(file, gs_path):
     os.system(upload_cmd)
 
 def upload_to_gee(file, gs_path, asset_id, date, time='00' + ':' + '00' + ':00'):
+    ee.Initialize(project=utils.config.project_name)
     """Uploads a specified file to Google Earth Engine with the provided asset ID, date, and optional time."""
     file_name = file.split('/')[-1]
     gs_path += "/" + file_name

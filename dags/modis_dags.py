@@ -35,7 +35,7 @@ for i in range(len(ids)):
     dag = DAG(
         f'MODIS_{ids[i]}',
         default_args=config.default_args,
-        schedule_interval='0 10 * * *',
+        schedule_interval='0 12 * * *',
         description='A DAG for processing MODIS images and upload to gee',
         catchup=False
     )

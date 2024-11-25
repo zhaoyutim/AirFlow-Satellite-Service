@@ -8,6 +8,7 @@ and managing multiprocessing tasks for efficiency.
 import os
 import sys
 import datetime
+import psutil
 from pathlib import Path
 root_path = str(Path(__file__).resolve().parents[1]) + "/"
 sys.path.insert(0,root_path)
@@ -96,11 +97,16 @@ def read_and_project(dir_nc, date, product_id, bands, dir_tif, dir_chan):
         print("n_chan:", n_chan)
         new_scn.save_dataset(
             writer='geotiff', dtype=np.float32, enhance=False,
-            filename='{name}_{start_time:%Y%m%d_%H%M%S}.tif',
+            filename='{name}.tif',
             dataset_id=bands[n_chan],
             base_dir=dir_nc,
             BIGTIFF='YES')
-
+        if 'MOD' in dir_nc and 'D' in dir_nc and not os.path.exists(os.path.join(dir_nc, f'M11.tif')):
+            raise "the day MOD geotiff is not sucessfullly generated, missing channels"
+        elif 'IMG' in dir_nc and 'D' in dir_nc and not os.path.exists(os.path.join(dir_nc, f'I0{n_chan+1}.tif')):
+            raise "the day IMG geotiff is not sucessfullly generated, missing channels"
+        elif 'IMG' in dir_nc and 'N' in dir_nc and not os.path.exists(os.path.join(dir_nc, f'I0{n_chan+4}.tif')):
+            raise "the night IMG geotiff is not sucessfullly generated, missing channels"
     tif_files = glob.glob(dir_chan)
     tif_files.sort()
 
@@ -144,7 +150,7 @@ def project(id, roi, start_date, end_date, dn_img, dn_mod):
     os.makedirs(os.path.join(viirs_config.dir_subset, id),exist_ok=True)
     tasks = get_projection_tasks(start_date, duration, id, roi, dn_img, 'IMG')
     tasks.extend(get_projection_tasks(start_date, duration, id, roi, dn_mod, 'MOD'))
-    with multiprocessing.Pool(processes=2) as pool:
+    with multiprocessing.Pool(processes=1) as pool:
         list(pool.imap_unordered(process_wrapper, tasks))
 
 def get_projection_tasks(start_date, duration, id, roi, day_nights, product_id):
@@ -168,9 +174,9 @@ def get_projection_tasks(start_date, duration, id, roi, day_nights, product_id):
                     skip_project = False
                 if 'MOD' in product_id:
                     bands = ['M11', 'm_lat', 'm_lon']
-                    dir_chan = os.path.join(dir_nc, "M[0-9]*_[0-9]*_[0-9]*.tif")
+                    dir_chan = os.path.join(dir_nc, "M[0-9]*.tif")
                 else:
-                    dir_chan = os.path.join(dir_nc, "I[0-9]*_[0-9]*_[0-9]*.tif")
+                    dir_chan = os.path.join(dir_nc, "I[0-9]*.tif")
                     if dn == 'D':
                         bands = ['I01', 'I02', 'I03', 'I04', 'I05', 'i_lat', 'i_lon']
                     else: 
@@ -190,13 +196,18 @@ if __name__ == "__main__":
     parser.add_argument('--roi', type=lambda s: [float(item) for item in s.split(',')])
     parser.add_argument('--start_date')
     parser.add_argument('--end_date')
-    parser.add_argument('--dn_img', type=lambda s: [item for item in s.split(',')])
+    parser.add_argument('--dn_img', type=lambda s: [item for item in s.split(',')], default=[])
     parser.add_argument('--dn_mod', type=lambda s: [item for item in s.split(',')], default=[])
-    parser.add_argument('--collection_id', default='5201')
+    parser.add_argument('--collection_id', default='5200')
     parser.add_argument('--products_id_img', type=lambda s: [item for item in s.split(',')], default=['VNP02IMG', 'VNP03IMG'])
     parser.add_argument('--products_id_mod', type=lambda s: [item for item in s.split(',')], default=['VNP02MOD','VNP03MOD'])
 
     args = parser.parse_args()
-
+    print(psutil.cpu_percent())
+    print(psutil.virtual_memory())
     download(args.id, args.roi, args.start_date, args.end_date, args.dn_img, args.dn_mod, args.collection_id, args.products_id_img, args.products_id_mod)
+    print(psutil.cpu_percent())
+    print(psutil.virtual_memory())
     project(args.id, args.roi, args.start_date, args.end_date, args.dn_img, args.dn_mod)
+    print(psutil.cpu_percent())
+    print(psutil.virtual_memory())

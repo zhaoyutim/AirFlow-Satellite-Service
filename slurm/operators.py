@@ -15,7 +15,7 @@ import re
 
 class SlurmOperator(BaseOperator):
     @apply_defaults
-    def __init__(self, script, conda_path, env, log_path, script_args=[], mem_per_cpu='4600M', cpus_per_task=8, num_gpus=1, poke_interval=60, timeout=3600, *args, **kwargs):
+    def __init__(self, script, conda_path, env, log_path, script_args=[], mem_per_cpu='16000M', cpus_per_task=8, num_gpus=1, poke_interval=60, timeout=3600, *args, **kwargs):
         """Initializes the SlurmOperator with parameters for job configuration and logging."""
         super(SlurmOperator, self).__init__(*args, **kwargs)
         self.poke_interval = poke_interval
@@ -48,9 +48,9 @@ class SlurmOperator(BaseOperator):
         args_string = ""
         for key, value in args.items():
                 if isinstance(value,list):
-                    args_string += f" {key}=\"{",".join(map(str, value))}\""
+                    args_string += f' {key}=\"{",".join(map(str, value))}\"'
                 else:
-                    args_string += f" {key}=\"{str(value)}\""
+                    args_string += f' {key}=\"{str(value)}\"'
         return args_string
     
     def submit_slurm_job(self):
@@ -139,6 +139,7 @@ class SlurmOperator(BaseOperator):
                     if i >= self.log_tracker[1]:
                         self.log.error(f"Slurm Error: {line.strip()}")
                         self.log_tracker[1] = i+1
+                        raise AirflowException(f"There is an error happened in current Slurm job with msg:{line.strip()}")
 
     def cleanup_logs(self):
         """Deletes the output and error log files after job completion."""

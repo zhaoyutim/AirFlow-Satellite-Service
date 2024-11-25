@@ -59,7 +59,7 @@ Ensure PostgreSQL is installed in your Conda environment. Follow these steps to 
    ```
 3. Create a non-superuser:
    ```bash
-    pg_ctl -D local_db -l logfile start
+    createuser mynonsuperuser
    ```
 4. Create the Airflow database owned by the new user:
    ```bash

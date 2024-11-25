@@ -16,7 +16,13 @@ def mosaic_geotiffs(geotiff_files):
     """Merges multiple GeoTIFF images into a single mosaic using maximum values for overlapping pixels."""
     # Read images and metadata
     src_files = [rasterio.open(file) for file in geotiff_files]
-
+    file_path = geotiff_files[0]
+    if '/D/' in file_path and 'MOD' in file_path:
+        src_files = list(filter(lambda x: (x.count==1), src_files))  
+    elif '/N/' in file_path and 'IMG' in file_path:
+        src_files = list(filter(lambda x: (x.count==2), src_files))  
+    elif '/D/' in file_path and 'IMG' in file_path:
+        src_files = list(filter(lambda x: (x.count==5), src_files))  
     # Merge images using maximum values for overlapping locations
     mosaic, out_transform = merge(src_files, method="max", nodata=0.0, res=0.00336)
 
@@ -64,30 +70,19 @@ def combine_tiff(file_paths,output_path,axis=0):
         print("Creating image of shape ", combined_image.shape)
         write_tiff(output_path, combined_image, combined_metadata)
 
+def stack_mir_on_base_img(base_img_path, save_path):
+    base_img, base_metadata = read_tiff(base_img_path)
+    date_img, date_metadata = read_tiff(save_path)
+
+    for i in [3, 4, 6, 7]:
+        date_img[i, ...] = np.maximum(base_img[i, ...], date_img[i, ...])
+    
+    base_img = date_img
+    print("Update date img and base img at location:", save_path)
+    write_tiff(base_img_path, base_img, base_metadata)
+    write_tiff(save_path.replace('VNP', 'BA'), date_img, date_metadata)
 
 if __name__=='__main__':
     # Changed the id
-    id = 'New_BC_Alberta_danny'
-    if not os.path.exists(os.path.join('data/tif_dataset', id)):
-        os.mkdir(os.path.join('data/tif_dataset', id))
-    # Changing the date
-    start_date = '2023-05-12'
-    end_date = '2023-07-01'
-    
-    duration = datetime.datetime.strptime(end_date, '%Y-%m-%d') - datetime.datetime.strptime(start_date, '%Y-%m-%d')
-    for k in range(duration.days):
-        date = (datetime.datetime.strptime(start_date, '%Y-%m-%d') + datetime.timedelta(k)).strftime('%Y-%m-%d')
-        print('Processing: ' + date)
-        output_path = os.path.join('data/tif_dataset', id, 'VNPIMG'+date+'_mosaic.tif')
-        tiff_files = glob.glob(os.path.join('data/subset/', id, 'VNPIMG'+date+'*.tif'))
-        print('Remove Nan')
-        for tiff_file in tiff_files:
-            array, profile = read_tiff(tiff_file)
-            array = np.nan_to_num(array)
-            plt.imshow(array[0,:,:])
-            plt.show()
-            write_tiff(tiff_file, array, profile)
-        print('Finish remove Nan')
-        mosaic, mosaic_metadata = mosaic_geotiffs(tiff_files)
-        write_tiff(output_path, mosaic, mosaic_metadata)
-        print('Finish Creating mosaic')
+    img_day_tiff_files = glob.glob(os.path.join('/home/z/h/zhao2/AirFlow-Satellite-Service/data/VIIRS/patched_regions/EU/2024-11-19/D/-170.0_50.13978494623656_-165.0_55.13978494623656', 'VNPIMG'+'*.tif'), recursive=True)
+    mosaic_geotiffs(img_day_tiff_files)
