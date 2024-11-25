@@ -87,22 +87,11 @@ def run(model_name,mode,batch_size,num_heads,hidden_size,n_channel,ts_length,att
     if plot:
         os.makedirs(root_path+'/evaluation_plot',exist_ok=True)
 
+    model = nn.DataParallel(model)
+    model.to(device)
     checkpoint = torch.load(checkpoint_path,map_location='cpu')
     model.load_state_dict(checkpoint['model_state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-
-    #from collections import OrderedDict
-    #state_dict = torch.load(checkpoint_path, map_location='cpu')
-    #model_state_dict = state_dict['model_state_dict']
-    #new_state_dict = OrderedDict()
-    #for k, v in model_state_dict.items():
-    #    new_state_dict[k.replace("module.", "")] = v
-    #model.load_state_dict(new_state_dict)
-    #state_dict['model_state_dict'] = model.state_dict()
-    #torch.save(state_dict,checkpoint_path)
-
-    model = nn.DataParallel(model)
-    model.to(device)
 
     model.eval() 
     def normalization(array):
@@ -116,8 +105,10 @@ def run(model_name,mode,batch_size,num_heads,hidden_size,n_channel,ts_length,att
         data_paths.extend(glob.glob(data_path+'/'+date_interval+'*.npy', recursive=True))
     
     print("Found ", len(data_paths), " files." )
-    
-    save_path = output_path+'/'+ model_name + '/' + 'raw/'
+    if mode == 'ba':
+        save_path = output_path+'/'+ model_name + 'BA/' + 'raw/'
+    else:
+        save_path = output_path+'/'+ model_name + '/' + 'raw/'
     os.makedirs(save_path,exist_ok=True)
 
     for l in range(len(data_paths)):

@@ -32,8 +32,7 @@ dn_img = ['D','N','B']
 dn_mod = ['D']
 collection_id = '5200' #'5200'
 model = "swinunetr3d"
-checkpoint_path = "/home/a/a/aadelow/TS-SatFire/saved_models/model_swinunetr3d_mode_af_num_heads_3_hidden_size_36_batchsize_4_checkpoint_epoch_80_nc_8_ts_2.pth"
-
+checkpoint_path = "/home/z/h/zhao2/TS-SatFire/saved_models/model_swinunetr3d_mode_af_num_heads_3_hidden_size_36_batchsize_4_checkpoint_epoch_80_nc_8_ts_2.pth"
 
 ids = ["CANADA","US","EU"]#,"AF","AS","SA","OC"]
 rois = [[-170,41,-41,73],[-127,24,-66,50],[-24,35,41,72]] #,[-20, -35, 52, 37],[25, 5, 180, 81],[-82, -56, -35, 13],[110, -47, 180, -10]]

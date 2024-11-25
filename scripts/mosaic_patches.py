@@ -29,7 +29,7 @@ def batch_patches(paths, save_path):
         image = np.array(tif)
         patched_image = np.concatenate((patched_image, patch_image(image)),axis=2)
     np.save(save_path, patched_image)
-    print("Saved batched pathches", save_path)
+    # print("Saved batched pathches", save_path)
 
 def patch_image(img):
     """Extracts and patches sections of an image."""
@@ -55,7 +55,7 @@ def patch_region(id,file,roi,date):
     if os.path.exists(output_path.replace('VNP'+product_id, 'VNP' +product_id + 'PRO')):
         return
     cmd='gdalwarp '+'-te ' + str(roi[0]) + ' ' + str(roi[1]) + ' ' + str(roi[2]) + ' ' + str(roi[3]) + ' ' + file + ' ' + output_path + " -wo USE_OPENCL=TRUE"
-    print(cmd)
+    # print(cmd)
     subprocess.call(cmd.split())
     print("Completed crop. Saved file at ", output_path)              
 
@@ -79,7 +79,7 @@ def create_mosaic(id, roi, date, mode, dir_subset):
 
     for channel in range(3):
         for file in tiff_files[channel]:
-            print("Reading file: ", file)
+            # print("Reading file: ", file)
             array, profile = main_mosaic.read_tiff(file)
             array = np.nan_to_num(array)
             main_mosaic.write_tiff(file, array, profile)

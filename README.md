@@ -1,7 +1,7 @@
 # AirFlow-Satellite-Service
 
 ## Project Overview
-This repository, `AirFlow-Satellite-Service`, provides pipelines for performing deep learning inference on satellite imagery using Apache Airflow. These pipelines automate tasks such as downloading, preprocessing, and running inference on satellite data, and exporting results to the cloud.
+This repository, `AirFlow-Satellite-Service`, provides pipelines for performing deep learning inference on satellite imagery using Apache Airflow. These pipelines automate tasks such as downloading, preprocessing, and running inference on satellite data, and exporting results to the cloud. Detailed information about how to use this project can be found here. https://docs.google.com/document/d/1As_sEF2J2YtG2b7oHffV7mta8WvFXqwkModhyonKssU/edit?usp=sharing
 
 ## Repository Structure
 - **`dags/`**: Contains all Airflow DAGs (Directed Acyclic Graphs) defining tasks and their dependencies. Each `.py` file corresponds to a specific satellite data pipeline.

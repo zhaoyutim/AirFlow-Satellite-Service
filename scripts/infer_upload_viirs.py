@@ -7,6 +7,7 @@ reconstructing images, and uploading files in parallel.
 """
 import glob
 import os
+# os.environ["CUDA_VISIBLE_DEVICES"]="6,7,8,9"
 import sys
 from pathlib import Path
 root_path = str(Path(__file__).resolve().parents[1]) + "/"
@@ -101,10 +102,14 @@ def is_contained(rect1, rect2):
     return (x1_min >= x2_min and x1_max <= x2_max and
             y1_min >= y2_min and y1_max <= y2_max)
 
-def reconstruct_image(id, model_name, start_date, end_date):
+def reconstruct_image(id, model_name, mode, start_date, end_date):
     """Reconstructs images from the inference results and saves them."""
-    data_path = os.path.join(root_path, "data/VIIRS/model_outputs", id, model_name, "raw")
-    save_path = os.path.join(root_path, "data/VIIRS/model_outputs", id, model_name, "reconstructed")
+    if mode == 'ba':
+        data_path = os.path.join(root_path, "data/VIIRS/model_outputs", id, model_name+'BA', "raw")
+        save_path = os.path.join(root_path, "data/VIIRS/model_outputs", id, model_name+'BA', "reconstructed")
+    else:
+        data_path = os.path.join(root_path, "data/VIIRS/model_outputs", id, model_name, "raw")
+        save_path = os.path.join(root_path, "data/VIIRS/model_outputs", id, model_name, "reconstructed")
     os.makedirs(save_path, exist_ok=True)
 
     print('Reconstructing...')
@@ -182,7 +187,7 @@ def upload_in_parallel(start_date, end_date, asset_id, dir_tif):
     print("Found",len(args_list),"files to upload.")
     
     results = []
-    with multiprocessing.Pool(processes=8) as pool:
+    with multiprocessing.Pool(processes=4) as pool:
         for args in args_list:
             result = pool.apply_async(upload_files, args)
             results.append(result)
@@ -206,7 +211,7 @@ if __name__ == "__main__":
     print("Memory used:", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
     inference(args.id, args.model_name, args.start_date, args.end_date, args.mode, args.checkpoint_path, args.ts_len)
     print("Memory used:", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
-    reconstruct_image(args.id, args.model_name, args.start_date, args.end_date)
+    reconstruct_image(args.id, args.model_name, args.mode, args.start_date, args.end_date)
     print("Memory used:", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
     upload_in_parallel(args.start_date, args.end_date, args.asset_id, args.dir_tif)
     print("Memory used:", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)

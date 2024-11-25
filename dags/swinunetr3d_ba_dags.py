@@ -108,7 +108,7 @@ for i in range(len(ids)):
                          "--checkpoint_path": checkpoint_path,
                          "--ts_len": interval,
                          "--asset_id": f"projects/ee-eo4wildfire/assets/{model}BA_{ids[i]}",
-                         "--dir_tif": f"{root_path}data/VIIRS/model_outputs/{ids[i]}/{model}/reconstructed"},
+                         "--dir_tif": f"{root_path}data/VIIRS/model_outputs/{ids[i]}/{model}BA/reconstructed"},
             script=root_path+"scripts/infer_upload_viirs.py",
             conda_path=slurm_config['conda_path'],
             cpus_per_task=4,
