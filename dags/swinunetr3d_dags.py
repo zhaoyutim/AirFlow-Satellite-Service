@@ -34,8 +34,8 @@ collection_id = '5200' #'5200'
 model = "swinunetr3d"
 checkpoint_path = "/home/z/h/zhao2/TS-SatFire/saved_models/model_swinunetr3d_mode_af_num_heads_3_hidden_size_36_batchsize_4_checkpoint_epoch_80_nc_8_ts_2.pth"
 
-ids = ["CANADA","US","EU"]#,"AF","AS","SA","OC"]
-rois = [[-170,41,-41,73],[-127,24,-66,50],[-24,35,41,72]] #,[-20, -35, 52, 37],[25, 5, 180, 81],[-82, -56, -35, 13],[110, -47, 180, -10]]
+ids = ["CANADA","US","EU", "AUS"]#,"AF","AS","SA","OC"]
+rois = [[-170,41,-41,73],[-127,24,-66,50],[-24,35,41,72],[106,-50,180,-5]] #,[-20, -35, 52, 37],[25, 5, 180, 81],[-82, -56, -35, 13],[110, -47, 180, -10]]
 
 start_date = (datetime.datetime.today()-datetime.timedelta(days=2)).strftime('%Y-%m-%d')
 end_date = (datetime.datetime.today()-datetime.timedelta(days=0)).strftime('%Y-%m-%d')

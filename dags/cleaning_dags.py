@@ -27,7 +27,8 @@ with dag:
         task_id="clean_task",
         script_args={"--path": f"{root_path}data",
                      "--days": 3,
-                     "--asset_ids": [asset_prefix+"MODIS_EU", asset_prefix+"MODIS_NA", asset_prefix+"VIIRS_Iband_Day_CANADA", asset_prefix+"VIIRS_Iband_Day_EU", asset_prefix+"VIIRS_Iband_Day_US", asset_prefix+"VIIRS_Iband_Night_CANADA", asset_prefix+"VIIRS_Iband_Night_EU", asset_prefix+"VIIRS_Iband_Night_US"]},
+                     "--asset_ids": [asset_prefix+"MODIS_EU", asset_prefix+"MODIS_NA"]},
+                    #  , asset_prefix+"VIIRS_Iband_Day_CANADA", asset_prefix+"VIIRS_Iband_Day_EU", asset_prefix+"VIIRS_Iband_Day_US", asset_prefix+"VIIRS_Iband_Night_CANADA", asset_prefix+"VIIRS_Iband_Night_EU", asset_prefix+"VIIRS_Iband_Night_US"
         script=root_path+"scripts/clean.py",
         conda_path=slurm_config['conda_path'],
         env=slurm_config['env'],

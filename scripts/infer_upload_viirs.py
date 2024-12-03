@@ -7,7 +7,7 @@ reconstructing images, and uploading files in parallel.
 """
 import glob
 import os
-# os.environ["CUDA_VISIBLE_DEVICES"]="6,7,8,9"
+os.environ["CUDA_VISIBLE_DEVICES"]="6,7,8,9"
 import sys
 from pathlib import Path
 root_path = str(Path(__file__).resolve().parents[1]) + "/"
@@ -35,8 +35,10 @@ def inference(id, model_name, start_date, end_date, mode, checkpoint_path, ts_le
     output_path = os.path.join(root_path, "data/VIIRS/model_outputs", id)
     os.makedirs(data_path, exist_ok=True)
     os.makedirs(output_path, exist_ok=True)
-
-    infer.run(model_name,mode,4,3,36,8,ts_len,'v1',str(start_date),str(end_date),output_path,data_path,checkpoint_path)
+    if mode == 'ba':
+        infer.run(model_name,mode,4,3,36,8,ts_len,'ar',str(start_date),str(end_date),output_path,data_path,checkpoint_path)
+    else:
+        infer.run(model_name,mode,4,3,36,8,ts_len,'v1',str(start_date),str(end_date),output_path,data_path,checkpoint_path)
     print("Inference completed.")
 
 def save_fire_location(image, roi_float, date, diff, save_path, min_cluster_size = 5):

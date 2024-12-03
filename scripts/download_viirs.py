@@ -28,6 +28,7 @@ from satpy.scene import Scene
 laads_client = LaadsClient()
 
 def download(id, roi, start_date, end_date, dn_img, dn_mod, collection_id, products_id_img, products_id_mod):
+    print("Memory used:", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
     """Downloads VIIRS data files based on specified parameters."""
     print("Downloading files from", start_date,"to",end_date)
     duration = datetime.datetime.strptime(end_date, '%Y-%m-%d') - datetime.datetime.strptime(start_date, '%Y-%m-%d')
@@ -77,6 +78,7 @@ def get_client_tasks(id, start_date, duration, products_id, day_night, collectio
     return tasks
 
 def read_and_project(dir_nc, date, product_id, bands, dir_tif, dir_chan):
+    print("Memory used:", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
     """Reads the downloaded data, projects it to a specified area, and saves it as GeoTIFF files."""
     time_captured = dir_nc.split('.')[-1][-4:]
     files = find_files_and_readers(base_dir=dir_nc, reader='viirs_l1b')

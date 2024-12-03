@@ -31,11 +31,11 @@ product_id = 'IMG'
 products_id = ['VNP02'+product_id, 'VNP03'+product_id]
 collection_id = '5200'
 
-ids = ["CANADA","US","EU"]
-rois = [[-170,41,-41,73],[-127,24,-66,50],[-24,35,41,72]]
+ids = ["CANADA","US","EU","AUS"]
+rois = [[-170,41,-41,73],[-127,24,-66,50],[-24,35,41,72],[106,-50,180,-5]]
 
 dns = ['D', 'N']
-schedule_interval = ['0 12 * * *','0 12 * * *','0 12 * * *']
+schedule_interval = ['0 12 * * *','0 12 * * *','0 12 * * *','0 6 * * *']
 
 for i in range(len(ids)):
     for dn in dns:

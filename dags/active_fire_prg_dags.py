@@ -25,10 +25,11 @@ from_date = "2024-04-01"
 to_date = datetime.today().strftime('%Y-%m-%d')
 
 sources = ["VIIRS","MODIS"]
-ids = ["CA","US","EU"] #,"AF","AS","SA","OC"]
+ids = ["CA","US","EU","AUS"] #,"AF","AS","SA","OC"]
 regions = [ee.Geometry.Polygon([[-171.85273276498725, 71.77440635086317],[-171.85273276498725, 25.88033295113415],[-52.673045264987266, 25.88033295113415],[-52.673045264987266, 71.77440635086317]]), #CA
            ee.Geometry.Polygon([[-140, 40],[-140, 10],[-40, 10],[-40, 40]]), #US
            ee.Geometry.Polygon([[[-17.504687500000014, 62.86752265950611],[-17.504687500000014, 28.21215701660283],[44.01874999999998, 28.21215701660283],[44.01874999999998, 62.86752265950611]]]), #EU
+           ee.Geometry.Polygon([[[106, -5],[106, -50],[180, -50],[180, -5]]]) #AUS
            #ee.Geometry.Polygon([[-20, -35], [52, -35], [52, 37], [-20, 37], [-20, -35]]), #AF
            #ee.Geometry.Polygon([[25, 5], [180, 5], [180, 81], [25, 81], [25, 5]]), #AS
            #ee.Geometry.Polygon([[-82, -56], [-35, -56], [-35, 13], [-82, 13], [-82, -56]]), #SA
@@ -61,14 +62,14 @@ def convert_active_fire(id, source, from_date, to_date, path, to_asset_id,region
         'system:time_end': to_date_millis
     })
 
-    asset_info = ee.data.getInfo(to_asset_id + to_date)
+    asset_info = ee.data.getInfo(to_asset_id +'/'+ to_date)
     if asset_info:
-        ee.data.deleteAsset(to_asset_id + to_date)
+        ee.data.deleteAsset(to_asset_id +'/'+ to_date)
     
     export_task = ee.batch.Export.image.toAsset(
         image=prg_regional,
         description='prg_regional_export_'+source+'_'+id,
-        assetId=to_asset_id + to_date,
+        assetId=to_asset_id +'/'+ to_date,
         scale=500,  
         region=region,
         maxPixels=1e9

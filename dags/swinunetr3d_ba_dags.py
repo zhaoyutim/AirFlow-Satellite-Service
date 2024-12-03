@@ -32,17 +32,18 @@ dn_img = ['D','N','B']
 dn_mod = ['D']
 collection_id = '5200' #'5200'
 model = "swinunetr3d"
-checkpoint_path = "/home/z/h/zhao2/TS-SatFire/saved_models/model_swinunetr3d_mode_ba_num_heads_3_hidden_size_36_batchsize_4_checkpoint_epoch_69_nc_8_ts_2.pth"
+checkpoint_path = "/home/z/h/zhao2/TS-SatFire/saved_models/model_swinunetr3d_run_1_seed_42_mode_ba_num_heads_3_hidden_size_36_batchsize_4_checkpoint_epoch_60_nc_8_ts_6_attention_ar_seed_42.pth"
 
 
-ids = ["CANADA","US","EU"]#,"AF","AS","SA","OC"]
-rois = [[-170,41,-41,73],[-127,24,-66,50],[-24,35,41,72]] #,[-20, -35, 52, 37],[25, 5, 180, 81],[-82, -56, -35, 13],[110, -47, 180, -10]]
+ids = ["CANADA","US","EU","AUS"]#,"AF","AS","SA","OC"]
+rois = [[-170,41,-41,73],[-127,24,-66,50],[-24,35,41,72],[106,-50,180,-5]] #,[-20, -35, 52, 37],[25, 5, 180, 81],[-82, -56, -35, 13],[110, -47, 180, -10]]
 
-start_date = (datetime.datetime.today()-datetime.timedelta(days=2)).strftime('%Y-%m-%d')
+interval = 6
+start_date = (datetime.datetime.today()-datetime.timedelta(days=interval)).strftime('%Y-%m-%d')
 end_date = (datetime.datetime.today()-datetime.timedelta(days=0)).strftime('%Y-%m-%d')
 
 mode = 'ba'
-interval = 2
+
 schedule_interval = ['0 16 * * *','0 16 * * *','0 16 * * *','0 16 * * *','0 18 * * *','0 20 * * *','0 22 * * *']
 
 
@@ -69,6 +70,7 @@ for i in range(len(ids)):
             script=root_path+"scripts/download_viirs.py",
             conda_path=slurm_config['conda_path'],
             cpus_per_task=4,
+            mem_per_cpu='10000M',
             num_gpus=0,
             env=slurm_config['env'],
             log_path=slurm_config['log_path'],

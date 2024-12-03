@@ -26,16 +26,20 @@ SOURCE = edict(config.modis_config['MOD09GA'])
 products_id = SOURCE.products_id
 collection_id = SOURCE.collection_id
 date = (datetime.datetime.today()-datetime.timedelta(days=1)).strftime('%Y-%m-%d')
-ids = ["NA","EU"]
+ids = ["NA","EU","AUS"]
 hh_lists = [['08', '09', '10', '11', '12', '13', '14'], #NA
-            ['17', '18', '19', '20', '21', '22', '23']] #EU
-vv_list = ['02', '03', '04', '05']
+            ['17', '18', '19', '20', '21', '22', '23'],
+            ['29', '30', '31', '32', '33', '34', '35']] #EU
+vv_lists = [['02', '03', '04', '05'],
+           ['02', '03', '04', '05'],
+           ['10', '11', '12', '13']]
+schedule_interval = ['0 12 * * *','0 12 * * *','0 6 * * *']
 
 for i in range(len(ids)):
     dag = DAG(
         f'MODIS_{ids[i]}',
         default_args=config.default_args,
-        schedule_interval='0 12 * * *',
+        schedule_interval=schedule_interval[i],
         description='A DAG for processing MODIS images and upload to gee',
         catchup=False
     )
@@ -47,7 +51,7 @@ for i in range(len(ids)):
                          "--collection_id": collection_id,
                          "--products_id": products_id,
                          "--hh_list": hh_lists[i],
-                         "--vv_list": vv_list,
+                         "--vv_list": vv_lists[i],
                          "--format": SOURCE.format,
                          "--bands": SOURCE.BANDS},
             script=root_path+"scripts/download_modis.py",

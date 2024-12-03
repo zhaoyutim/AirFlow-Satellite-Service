@@ -123,7 +123,6 @@ def get_patch_images_tasks(id, start_date, end_date, mode, roi, step, interval, 
         for j in range(len(y_start)):            
                 roi_string = '_'.join(str(x) for x in np.array([x_start[i], y_start[j], x_stop[i], y_stop[j]]))
                 batched_tasks = []
-                print(duration.days)
                 for l in range(duration.days//interval):
                     date = (datetime.datetime.strptime(start_date, '%Y-%m-%d') + datetime.timedelta(l*interval)).strftime('%Y-%m-%d')
                     from_date = date
